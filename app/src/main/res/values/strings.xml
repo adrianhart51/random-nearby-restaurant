@@ -1,10 +1,11 @@
 <resources>
     <string name="app_name">Random Nearby Restaurant</string>
+    <string name="get_cuisines">Get Cuisines</string>
     <string name="login">Login</string>
     <string name="enter_mobile_number">Enter mobile number</string>
     <string name="enter_password">Enter password</string>
     <string name="enter_valid_password">Enter valid password</string>
     <string name="enter_valid_mobile">Enter valid mobile number</string>
     <string name="network_error">No network connection.</string>
-    <string name="errorString">Something went wrong, Please try again.</string>
+    <string name="error_string">Something went wrong, Please try again.</string>
 </resources>
