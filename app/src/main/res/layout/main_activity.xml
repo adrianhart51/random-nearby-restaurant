@@ -10,5 +10,5 @@
         android:id="@+id/button_get_cuisines"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Get Cuisines" />
+        android:text="@string/get_cuisines" />
 </FrameLayout>
