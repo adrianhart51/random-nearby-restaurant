@@ -3,10 +3,14 @@ package id.ac.ui.cs.mobileprogramming.adrianhartanto.randomnearbyrestaurant
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.widget.ArrayAdapter
+import android.widget.Spinner
 import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import com.google.gson.Gson
 import com.google.gson.JsonElement
+import id.ac.ui.cs.mobileprogramming.adrianhartanto.randomnearbyrestaurant.dao.Cuisine
 import id.ac.ui.cs.mobileprogramming.adrianhartanto.randomnearbyrestaurant.product.AppApplication
 import id.ac.ui.cs.mobileprogramming.adrianhartanto.randomnearbyrestaurant.ui.main.MainViewModel
 import id.ac.ui.cs.mobileprogramming.adrianhartanto.randomnearbyrestaurant.utils.ApiResponse
@@ -23,6 +27,8 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var mainViewModel: MainViewModel
 
+    var gson = Gson()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
@@ -33,6 +39,8 @@ class MainActivity : AppCompatActivity() {
 
         mainViewModel.getCuisinesResponse().observe(this,
             Observer<ApiResponse> { apiResponse -> consumeResponse(apiResponse) })
+
+        mainViewModel.hitGetCuisinesApi(-6.595038, 106.816635)
 
         button_get_cuisines.setOnClickListener { view ->
             mainViewModel.hitGetCuisinesApi(-6.595038, 106.816635)
@@ -62,7 +70,16 @@ class MainActivity : AppCompatActivity() {
 
     private fun renderSuccessResponse(response: JsonElement?) {
         if (!response?.isJsonNull!!) {
-            Log.d("response=", response.toString())
+            Log.d("response=",
+                response.toString()
+            )
+            val cuisines = response.asJsonObject.get("cuisines").asJsonArray.map {
+                    cuisine -> gson.fromJson(cuisine.asJsonObject.get("cuisine"), Cuisine::class.java) }
+            Log.d("response=",
+                cuisines.toString()
+            )
+            var adapter = ArrayAdapter(this, R.layout.support_simple_spinner_dropdown_item, cuisines)
+            spinner_cuisines.adapter = adapter
         } else {
             Toast.makeText(
                 this@MainActivity,
