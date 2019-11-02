@@ -21,12 +21,6 @@ import id.ac.ui.cs.mobileprogramming.adrianhartanto.randomnearbyrestaurant.utils
 import id.ac.ui.cs.mobileprogramming.adrianhartanto.randomnearbyrestaurant.utils.ViewModelFactory
 import javax.inject.Inject
 import kotlinx.android.synthetic.main.main_activity.*
-import java.io.File
-import androidx.core.app.ComponentActivity.ExtraData
-import androidx.core.content.ContextCompat.getSystemService
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
-
-
 
 
 class MainActivity : AppCompatActivity() {
@@ -99,11 +93,16 @@ class MainActivity : AppCompatActivity() {
 
     private fun renderGetCuisines(response: JsonElement?) {
         if (!response?.isJsonNull!!) {
-            Log.d("cuisines=",
+            Log.d(
+                "cuisines=",
                 response.toString()
             )
-            val cuisines = response.asJsonObject.get("cuisines").asJsonArray.map {
-                    cuisine -> gson.fromJson(cuisine.asJsonObject.get("cuisine"), Cuisine::class.java) }
+            val cuisines = response.asJsonObject.get("cuisines").asJsonArray.map { cuisine ->
+                gson.fromJson(
+                    cuisine.asJsonObject.get("cuisine"),
+                    Cuisine::class.java
+                )
+            }
             renderGetCuisinesSpinner(cuisines)
         } else {
             Toast.makeText(
@@ -127,9 +126,7 @@ class MainActivity : AppCompatActivity() {
         if (!response?.isJsonNull!!) {
             val searchRestaurantResult = gson.fromJson(response, SearchRestaurantResult::class.java)
             val restaurants = searchRestaurantResult.restaurants
-//            Log.d("Restaurants=",
-//                restaurants.toString()
-//            )
+
             largeLog("Restaurants=", restaurants.toString())
             renderSearchRestaurantsGridView(restaurants)
         } else {
@@ -163,20 +160,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun renderSearchRestaurantsGridView(restaurants: List<Restaurant>) {
         val adapter = ArrayAdapter(this, R.layout.support_simple_spinner_dropdown_item, restaurants)
-        gridview_search_results.adapter = adapter
-        gridview_search_results.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: AdapterView<*>,
-                view: View,
-                position: Int,
-                id: Long
-            ) {
-                val restaurant = parent.getItemAtPosition(position) as Restaurant
+        grid_view_search_results.adapter = adapter
+        grid_view_search_results.onItemClickListener =
+            AdapterView.OnItemClickListener { parent, view, position, id ->
+                val restaurant = parent.getItemAtPosition(position)
+
                 Log.d("Restaurant selected", restaurant.toString())
             }
-
-            override fun onNothingSelected(parent: AdapterView<*>) {
-            }
-        }
     }
 }
