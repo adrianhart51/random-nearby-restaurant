@@ -3,8 +3,9 @@ package id.ac.ui.cs.mobileprogramming.adrianhartanto.randomnearbyrestaurant
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.Spinner
 import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -38,7 +39,10 @@ class MainActivity : AppCompatActivity() {
         mainViewModel = ViewModelProviders.of(this, viewModelFactory).get(MainViewModel::class.java)
 
         mainViewModel.getCuisinesResponse().observe(this,
-            Observer<ApiResponse> { apiResponse -> consumeResponse(apiResponse) })
+            Observer<ApiResponse> { apiResponse -> consumeGetCuisinesResponse(apiResponse) })
+
+        mainViewModel.searchResultsResponse().observe(this,
+            Observer<ApiResponse> { apiResponse -> consumeSearchResultsResponse(apiResponse) })
 
         mainViewModel.hitGetCuisinesApi(-6.595038, 106.816635)
 
@@ -47,12 +51,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun consumeResponse(apiResponse: ApiResponse) {
+    private fun consumeGetCuisinesResponse(apiResponse: ApiResponse) {
 
         when (apiResponse.status) {
 
             ApiResponseStatus.SUCCESS -> {
-                renderSuccessResponse(apiResponse.data)
+                renderGetCuisines(apiResponse.data)
             }
 
             ApiResponseStatus.ERROR -> {
@@ -68,24 +72,75 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun renderSuccessResponse(response: JsonElement?) {
+    private fun consumeSearchResultsResponse(apiResponse: ApiResponse) {
+
+        when (apiResponse.status) {
+
+            ApiResponseStatus.SUCCESS -> {
+                renderSearchResults(apiResponse.data)
+            }
+
+            ApiResponseStatus.ERROR -> {
+                Toast.makeText(
+                    this@MainActivity,
+                    resources.getString(R.string.error_string),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            else -> {
+            }
+        }
+    }
+
+    private fun renderSearchResults(response: JsonElement?) {
         if (!response?.isJsonNull!!) {
             Log.d("response=",
                 response.toString()
             )
-            val cuisines = response.asJsonObject.get("cuisines").asJsonArray.map {
-                    cuisine -> gson.fromJson(cuisine.asJsonObject.get("cuisine"), Cuisine::class.java) }
-            Log.d("response=",
-                cuisines.toString()
-            )
-            var adapter = ArrayAdapter(this, R.layout.support_simple_spinner_dropdown_item, cuisines)
-            spinner_cuisines.adapter = adapter
         } else {
             Toast.makeText(
                 this@MainActivity,
                 resources.getString(R.string.error_string),
                 Toast.LENGTH_SHORT
             ).show()
+        }
+    }
+
+    private fun renderGetCuisines(response: JsonElement?) {
+        if (!response?.isJsonNull!!) {
+            Log.d("response=",
+                response.toString()
+            )
+            val cuisines = response.asJsonObject.get("cuisines").asJsonArray.map {
+                    cuisine -> gson.fromJson(cuisine.asJsonObject.get("cuisine"), Cuisine::class.java) }
+            renderGetCuisinesSpinner(cuisines)
+        } else {
+            Toast.makeText(
+                this@MainActivity,
+                resources.getString(R.string.error_string),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    private fun renderGetCuisinesSpinner(cuisines: List<Cuisine>) {
+        val adapter = ArrayAdapter(this, R.layout.support_simple_spinner_dropdown_item, cuisines)
+        spinner_cuisines.adapter = adapter
+        spinner_cuisines.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>,
+                view: View,
+                position: Int,
+                id: Long
+            ) {
+                val cuisine = parent.getItemAtPosition(position) as Cuisine
+                Log.d("Spinner selected", cuisine.cuisine_id.toString())
+                mainViewModel.hitSearchRestaurantsApi(-6.595038, 106.816635, cuisine.cuisine_id)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {
+            }
         }
     }
 }

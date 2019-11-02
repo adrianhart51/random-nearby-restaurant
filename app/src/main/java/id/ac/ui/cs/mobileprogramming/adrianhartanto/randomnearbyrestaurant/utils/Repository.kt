@@ -13,7 +13,7 @@ class Repository(private val apiCall: ApiCall) {
         return apiCall.getCuisines(latitude, longitude)
     }
 
-    fun executeSearchRestaurants(latitude: Double, longitude: Double, cuisinesId: String): Observable<JsonElement> {
-        return apiCall.searchRestaurants(latitude, longitude, cuisinesId)
+    fun executeSearchRestaurants(latitude: Double, longitude: Double, cuisineId: Int): Observable<JsonElement> {
+        return apiCall.searchRestaurants(latitude, longitude, cuisineId)
     }
 }

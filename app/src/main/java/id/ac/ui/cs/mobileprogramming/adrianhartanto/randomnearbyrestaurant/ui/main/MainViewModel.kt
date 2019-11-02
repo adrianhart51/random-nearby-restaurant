@@ -10,38 +10,36 @@ import io.reactivex.schedulers.Schedulers
 
 class MainViewModel(private val repository: Repository) : ViewModel() {
     private val disposables = CompositeDisposable()
-    private val responseLiveData = MutableLiveData<ApiResponse>()
-
-
-    fun loginResponse(): MutableLiveData<ApiResponse> {
-        return responseLiveData
-    }
-
-    fun hitLoginApi(mobileNumber: String, password: String) {
-
-        disposables.add(repository.executeLogin(mobileNumber, password)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnSubscribe { d -> responseLiveData.setValue(ApiResponse.loading()) }
-            .subscribe(
-                { result -> responseLiveData.setValue(ApiResponse.success(result)) },
-                { throwable -> responseLiveData.setValue(ApiResponse.error(throwable)) }
-            ))
-
-    }
+    private val cuisinesResponseLiveData = MutableLiveData<ApiResponse>()
+    private val searchResultsResponseLiveData = MutableLiveData<ApiResponse>()
 
     fun getCuisinesResponse(): MutableLiveData<ApiResponse> {
-        return responseLiveData
+        return cuisinesResponseLiveData
+    }
+
+    fun searchResultsResponse(): MutableLiveData<ApiResponse> {
+        return searchResultsResponseLiveData
     }
 
     fun hitGetCuisinesApi(latitude: Double, longitude: Double) {
         disposables.add(repository.executeGetCuisines(latitude, longitude)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .doOnSubscribe { d -> responseLiveData.setValue(ApiResponse.loading()) }
+            .doOnSubscribe { d -> cuisinesResponseLiveData.setValue(ApiResponse.loading()) }
             .subscribe(
-                { result -> responseLiveData.setValue(ApiResponse.success(result)) },
-                { throwable -> responseLiveData.setValue(ApiResponse.error(throwable)) }
+                { result -> cuisinesResponseLiveData.setValue(ApiResponse.success(result)) },
+                { throwable -> cuisinesResponseLiveData.setValue(ApiResponse.error(throwable)) }
+            ))
+    }
+
+    fun hitSearchRestaurantsApi(latitude: Double, longitude: Double, cuisineId: Int) {
+        disposables.add(repository.executeSearchRestaurants(latitude, longitude, cuisineId)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnSubscribe { d -> searchResultsResponseLiveData.setValue(ApiResponse.loading()) }
+            .subscribe(
+                { result -> searchResultsResponseLiveData.setValue(ApiResponse.success(result)) },
+                { throwable -> searchResultsResponseLiveData.setValue(ApiResponse.error(throwable)) }
             ))
     }
 
