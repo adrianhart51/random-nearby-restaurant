@@ -12,6 +12,8 @@ import androidx.lifecycle.ViewModelProviders
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import id.ac.ui.cs.mobileprogramming.adrianhartanto.randomnearbyrestaurant.dao.Cuisine
+import id.ac.ui.cs.mobileprogramming.adrianhartanto.randomnearbyrestaurant.dao.Restaurant
+import id.ac.ui.cs.mobileprogramming.adrianhartanto.randomnearbyrestaurant.dao.SearchRestaurantResult
 import id.ac.ui.cs.mobileprogramming.adrianhartanto.randomnearbyrestaurant.product.AppApplication
 import id.ac.ui.cs.mobileprogramming.adrianhartanto.randomnearbyrestaurant.ui.main.MainViewModel
 import id.ac.ui.cs.mobileprogramming.adrianhartanto.randomnearbyrestaurant.utils.ApiResponse
@@ -19,6 +21,12 @@ import id.ac.ui.cs.mobileprogramming.adrianhartanto.randomnearbyrestaurant.utils
 import id.ac.ui.cs.mobileprogramming.adrianhartanto.randomnearbyrestaurant.utils.ViewModelFactory
 import javax.inject.Inject
 import kotlinx.android.synthetic.main.main_activity.*
+import java.io.File
+import androidx.core.app.ComponentActivity.ExtraData
+import androidx.core.content.ContextCompat.getSystemService
+import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+
+
 
 
 class MainActivity : AppCompatActivity() {
@@ -45,10 +53,6 @@ class MainActivity : AppCompatActivity() {
             Observer<ApiResponse> { apiResponse -> consumeSearchResultsResponse(apiResponse) })
 
         mainViewModel.hitGetCuisinesApi(-6.595038, 106.816635)
-
-        button_get_cuisines.setOnClickListener { view ->
-            mainViewModel.hitGetCuisinesApi(-6.595038, 106.816635)
-        }
     }
 
     private fun consumeGetCuisinesResponse(apiResponse: ApiResponse) {
@@ -77,7 +81,7 @@ class MainActivity : AppCompatActivity() {
         when (apiResponse.status) {
 
             ApiResponseStatus.SUCCESS -> {
-                renderSearchResults(apiResponse.data)
+                renderSearchRestaurants(apiResponse.data)
             }
 
             ApiResponseStatus.ERROR -> {
@@ -93,11 +97,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun renderSearchResults(response: JsonElement?) {
+    private fun renderGetCuisines(response: JsonElement?) {
         if (!response?.isJsonNull!!) {
-            Log.d("response=",
+            Log.d("cuisines=",
                 response.toString()
             )
+            val cuisines = response.asJsonObject.get("cuisines").asJsonArray.map {
+                    cuisine -> gson.fromJson(cuisine.asJsonObject.get("cuisine"), Cuisine::class.java) }
+            renderGetCuisinesSpinner(cuisines)
         } else {
             Toast.makeText(
                 this@MainActivity,
@@ -107,14 +114,24 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun renderGetCuisines(response: JsonElement?) {
+    fun largeLog(tag: String, content: String) {
+        if (content.length > 4000) {
+            Log.d(tag, content.substring(0, 4000))
+            largeLog(tag, content.substring(4000))
+        } else {
+            Log.d(tag, content)
+        }
+    }
+
+    private fun renderSearchRestaurants(response: JsonElement?) {
         if (!response?.isJsonNull!!) {
-            Log.d("response=",
-                response.toString()
-            )
-            val cuisines = response.asJsonObject.get("cuisines").asJsonArray.map {
-                    cuisine -> gson.fromJson(cuisine.asJsonObject.get("cuisine"), Cuisine::class.java) }
-            renderGetCuisinesSpinner(cuisines)
+            val searchRestaurantResult = gson.fromJson(response, SearchRestaurantResult::class.java)
+            val restaurants = searchRestaurantResult.restaurants
+//            Log.d("Restaurants=",
+//                restaurants.toString()
+//            )
+            largeLog("Restaurants=", restaurants.toString())
+            renderSearchRestaurantsGridView(restaurants)
         } else {
             Toast.makeText(
                 this@MainActivity,
@@ -135,8 +152,27 @@ class MainActivity : AppCompatActivity() {
                 id: Long
             ) {
                 val cuisine = parent.getItemAtPosition(position) as Cuisine
-                Log.d("Spinner selected", cuisine.cuisine_id.toString())
+                Log.d("Cuisine selected", cuisine.cuisine_id.toString())
                 mainViewModel.hitSearchRestaurantsApi(-6.595038, 106.816635, cuisine.cuisine_id)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {
+            }
+        }
+    }
+
+    private fun renderSearchRestaurantsGridView(restaurants: List<Restaurant>) {
+        val adapter = ArrayAdapter(this, R.layout.support_simple_spinner_dropdown_item, restaurants)
+        gridview_search_results.adapter = adapter
+        gridview_search_results.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>,
+                view: View,
+                position: Int,
+                id: Long
+            ) {
+                val restaurant = parent.getItemAtPosition(position) as Restaurant
+                Log.d("Restaurant selected", restaurant.toString())
             }
 
             override fun onNothingSelected(parent: AdapterView<*>) {
